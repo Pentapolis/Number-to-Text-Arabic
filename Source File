@@ -1,0 +1,216 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+namespace Num_to_Text
+{
+    public class NumberToText
+    {
+           // Arrays of Text numbers
+            string[] Range_0_19 = { "", "واحد", "إثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة", "عشرة", "أحد عشر", "إثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", "ستة عشر", "سبعة عشر", "ثمانية عشر", "تسعة عشر" };
+            string[] Range_20_90 = { "", "", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون" };
+            string[] Range_100_900 = { "", "مائة", "مائتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة" };
+            
+        // قوائم من الالف الى الترليون يمكنك اضافة اعداد اخري 
+        // عن طريق الاضافة المباشرة او باستخام أمر 
+        // add_new
+        // وكذلك استخدام show_max لاظهار اخر رقم تمت اضافته
+
+            List<string> Group_Ones = new List<string>() { "", "ألف", "مليون", "مليار", "ترليون" };
+            List<string> Group_Twos = new List<string>() { "", "ألفان", "مليونان", "ملياران", "ترليونان" };
+            List<string> Group_Three_Ten = new List<string>() { "", "ألاف", "ملايين", "مليارات", "ترليونات" };
+            List<string> Group_over_Ten = new List<string>() { "", "ألفاً", "مليوناً", "ملياراً", "ترليوناً" };
+
+            const string and = "  و";
+            const string zero = "صفر ";
+            public string Currency = "دينار";
+            public string Coin = "درهم";
+            public int Digits_of_Coin = 3;
+
+        // This method shows the last large number in the list "Group_Ones" or add by add_new method.   
+        public string show_max()
+        {
+            return Group_Ones[Group_Ones.Count() - 1];
+        }
+
+        // This method inserts new LARGE NUMBER to given lists
+        // Here are some of LARGE NUMBERS
+        //كوادرليون 15- كونتليون 18- سكستليون 21- سبيتلليون 24- أوكتليون 27- نونيلليون 30- دشيليون 33
+         public void Add_new(string Large_Number)
+        {
+            if (!Group_Ones.Contains(Large_Number))
+            {
+                Group_Ones.Add(Large_Number);
+                Group_Twos.Add(Large_Number + "ان");
+                Group_Three_Ten.Add(Large_Number + "ات");
+                Group_over_Ten.Add(Large_Number + "اً");
+            }
+            else
+            {
+                throw new System.ArgumentException("هذا الرقم موجود مسبقا", "This Large number already exist");
+            }
+        }
+
+        // Convert (integer) number to text
+        public string IntToText(string Integer_Number)
+        {
+            // Remove left zeros
+            Integer_Number = Integer_Number.TrimStart(new char[] { '0' });
+
+            // Difinition of varibles
+            string substr = string.Empty, converted = string.Empty, convert_all = string.Empty;
+            int substr_toInt, count = 0;
+
+            // Cut  the Number every three chars starting from the end of Number 
+            for (int i = Integer_Number.Count(); i > 0; i -= 3)
+            {
+                if (count >= Group_Ones.Count)
+                {
+                throw new System.ArgumentException("تم تجاوز اكبر رقم، استخدم امر الاضافة لادراج رقم كبير جديد", "Max large number exceeded, use add_new to add a new large number");
+                }
+                if (i > 2)
+                {
+                    substr = Integer_Number.Substring(i - 3, 3);
+                }
+                else
+                {
+                    substr = Integer_Number.Substring(0, i);
+                    substr = new string('0', 3 - substr.Length) + substr;
+                }
+
+                // Manupulate the substr of three chars and convert it 
+                // First: Ones and Tens
+                substr_toInt = int.Parse(substr.Substring(1, 2));
+                if (substr_toInt < 20)
+                {
+                    converted = ToWords(Range_0_19, substr, 1, 2);
+                }
+                else if (substr_toInt >= 20 && (substr_toInt % 10) == 0)
+                {
+                    converted = ToWords(Range_20_90, substr, 1);
+                }
+                else if (substr_toInt >= 20 && (substr_toInt % 10) != 0)
+                {
+                    converted = ToWords(Range_0_19, substr, 2) + and + ToWords(Range_20_90, substr, 1);
+                }
+
+                // Second: Handreds
+                substr_toInt = int.Parse(substr);
+                if (substr_toInt > 99)
+                {
+                    if (substr.Substring(1, 2) == "00")
+                    {
+                        converted = ToWords(Range_100_900, substr, 0);
+                    }
+                    else
+                    {
+                        converted = ToWords(Range_100_900, substr, 0) + and + converted;
+                    }
+                }
+
+                // Manopulate thousends and above
+                if (substr_toInt == 1)
+                {
+                    if (count > 0)
+                    {
+                        convert_all = (converted.Replace("واحد", Group_Ones[count]) + and + convert_all).Trim();
+                    }
+                    else
+                    {
+                        convert_all = (converted + " " + Group_Ones[count] + and + convert_all).Trim();
+                    }
+                }
+                else if (substr_toInt == 2)
+                {
+                    if (count > 0)
+                    {
+                        convert_all = (converted.Replace("إثنان", Group_Twos[count]) + and + convert_all).Trim();
+                    }
+                    else
+                    {
+                        convert_all = (converted + " " + Group_Twos[count] + and + convert_all).Trim();
+                    }
+                }
+                else if (substr_toInt > 2)
+                {
+                    if (substr_toInt < 11)
+                    {
+                        convert_all = (converted + " " + Group_Three_Ten[count] + and + convert_all).Trim();
+                    }
+                    else
+                    {
+                        convert_all = (converted + " " + Group_over_Ten[count] + and + convert_all).Trim();
+                    }
+                }
+                count++;
+            }
+
+            // Remove extra joinning arabic char at the end.
+            if ((convert_all.Trim()).EndsWith("و"))
+            {
+                convert_all = (convert_all.Trim()).Remove(convert_all.Length - 2);
+            }
+            return convert_all;
+        } // End of NoToText method.
+
+        // Method to catch text number 
+        string ToWords(string[] Range, string subst, int a, int b = 1)
+        {
+            return Range[int.Parse(subst.Substring(a, b))];
+        }
+
+        // Main Method
+        public string DblToText(string Double_Number)
+        {
+
+            if (Double_Number == "")
+            { return ""; }
+            else if (double.Parse(Double_Number) == 0)
+            { return zero; }
+
+            string[] Number= new string[2];
+            string Final_Text;
+            if (Double_Number.Contains("."))
+            {
+                Number = Double_Number.Split('.');
+                if (Digits_of_Coin < Number[1].Length)
+                {
+                    throw new System.ArgumentException("تم تجاوز الحد الاقصى لخانات العملة الصغيرة", "Max length of coin digits exceeded");
+                }
+                Number[1] = Number[1] + new string('0', Digits_of_Coin - Number[1].Length);
+                if (Number[0].Replace("0","") == "")
+                { 
+                    Final_Text = IntToText(Number[1]) + Coin ; 
+                }
+                else
+                {
+                    if (Number[1] == "")
+                    {
+                        Final_Text = IntToText(Number[0]) + Currency ;
+                    }
+                    else if (Number[1].Replace("0", "") == "")
+                    {
+                        Final_Text = IntToText(Number[0]) + Currency;
+                    }
+                    else
+                    {
+                        Final_Text = IntToText(Number[0]) + Currency + and + IntToText(Number[1]) + Coin;
+                    }
+                }
+            }
+            else
+            {
+                Number[0] = Double_Number;
+                Final_Text = IntToText(Number[0]) + Currency;
+            }
+            return Final_Text ;
+        }
+
+       
+    }
+}
